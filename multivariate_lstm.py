@@ -1,5 +1,9 @@
-from pandas import DataFrame
-from numpy import concat
+from numpy import array
+from numpy import hstack
+from pandas import DataFrame, read_csv, concat, read_csv
+import time
+
+n_in = 5
 
 
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
@@ -26,8 +30,21 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     return agg
 
 
-df = DataFrame()
-df['t'] = [x for x in range(10)]
-df['t+1'] = df['t'].shift(1)
+df = read_csv("datapoints.csv", parse_dates=[0])
 
-print(df)
+mask = df.name.str.contains("BLOK61")
+videolab = df[~mask]
+
+timestamps = DataFrame(videolab.pop("timestamp"))
+values = DataFrame(videolab.pop("value"))
+prev_values = series_to_supervised(values, n_in=n_in, n_out=0)
+
+
+dataset = []
+
+for i in range(len(timestamps)-n_in):
+    tmp = []
+    tmp.append(timestamps.iloc[i])
+    tmp.append(prev_values.iloc[i])
+    dataset.append(tmp)
+    dataset.append(values.iloc[i])
